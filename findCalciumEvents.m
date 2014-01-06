@@ -171,13 +171,13 @@ end
 for spine=1:numspines                                                       % summary matrix
     CsingleEventsSummary(:,spine)=CsingleEvents(:,spine)+spine-1;
 end   
-figure;plot(NtraceSummary); hold on;                                        % plot
+PureEvents=figure;plot(NtraceSummary); hold on;                                        % plot
 for spine=1:numspines
     plot(find(CsingleEventsSummary(:,spine)>spine-1),...
         NtraceSummary(CsingleEventsSummary(:,spine)>spine-1,spine), 'ko'); 
 end
 % end of correlated analysis
-
+set(PureEvents, 'HandleVisibility', 'off');
 
 for timestep=1:timesteps 
     NumEvents=sum(singleEvents(timestep,:));
