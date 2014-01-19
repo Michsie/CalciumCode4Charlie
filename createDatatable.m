@@ -26,5 +26,5 @@ for spine=1:numspines
         end
     end
 end
-t=uitable('Parent',tbl,'ColumnName',cnames,'Data',dat,'Position',[20 20 0.25*scrsz(3)-40 0.5*scrsz(4)-70-40],'ColumnWidth',{25},'RowName',rnames);
+t=uitable('Parent',tbl,'ColumnName',cnames,'Data',dat,'Position',[20 20 0.25*scrsz(3)-40 0.5*scrsz(4)-70-70],'ColumnWidth',{50,50,50,150},'RowName',rnames);
     set(tbl, 'HandleVisibility', 'off');

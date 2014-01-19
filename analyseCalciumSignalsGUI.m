@@ -22,7 +22,7 @@ function varargout = analyseCalciumSignalsGUI(varargin)
 
 % Edit the above text to modify the response to help analyseCalciumGUI
 
-% Last Modified by GUIDE v2.5 10-Jan-2014 16:56:57
+% Last Modified by GUIDE v2.5 15-Jan-2014 16:59:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,7 +71,9 @@ handles.stdThreshMatrix= varargin{11};
 handles.stdMultiplier=2;
 handles.slopeThresh=0.05;
 handles.onsetDist=5;
-
+handles.minDur=7;
+handles.baselineLength=100;
+handles.peakSearchDur=15;
 
 
 imagesc(handles.JayPeg);axis ij;                                            %displays the ROI overview Image in the axes of the GUI
@@ -343,7 +345,7 @@ function ReAnalyse_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [handles.events,singleEvents,handles.CsingleEvents,handles.Ntrace,...
-    handles.onsetRemoved,handles.stdRemoved,handles.minDurRemovedEvents,handles.EventEnds,handles.stdThreshMatrix]=findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,handles.slopeThresh,handles.onsetDist);
+    handles.onsetRemoved,handles.stdRemoved,handles.minDurRemovedEvents,handles.EventEnds,handles.stdThreshMatrix]=findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,handles.slopeThresh,handles.onsetDist,handles.minDur,handles.baselineLength,handles.peakSearchDur);
 guidata(hObject, handles);
 
 
@@ -409,6 +411,102 @@ guidata(hObject, handles);
 % --- Executes during object creation, after setting all properties.
 function slope_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slope (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function duration_Callback(hObject, eventdata, handles)
+% hObject    handle to duration (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.minDur=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of duration as text
+%        str2double(get(hObject,'String')) returns contents of duration as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function duration_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to duration (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function baseline_Callback(hObject, eventdata, handles)
+% hObject    handle to baseline (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.baselineLength=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of baseline as text
+%        str2double(get(hObject,'String')) returns contents of baseline as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function baseline_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to baseline (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit10_Callback(hObject, eventdata, handles)
+% hObject    handle to edit10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.peakSearchDur=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of edit10 as text
+%        str2double(get(hObject,'String')) returns contents of edit10 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit10_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function acquisitionFrequency_Callback(hObject, eventdata, handles)
+% hObject    handle to acquisitionFrequency (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.AcqFreq=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of acquisitionFrequency as text
+%        str2double(get(hObject,'String')) returns contents of acquisitionFrequency as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function acquisitionFrequency_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to acquisitionFrequency (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
