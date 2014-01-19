@@ -60,6 +60,7 @@ handles.JayPeg=varargin{2};
 
 handles.FinalImage = varargin{3};
 handles.CsingleEvents = varargin{4};
+handles.events = varargin{5};
 
 
 
@@ -142,7 +143,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 if handles.neuron>size(handles.NCalciumSignal,2)
     'number specified exceeds number of ROIs'
 else    
-    plotNeuronTraces(handles.neuron,handles.NCalciumSignal,handles.CsingleEvents);
+    plotNeuronTraces(handles.neuron,handles.NCalciumSignal,handles.CsingleEvents,handles.events);
     
 end
 

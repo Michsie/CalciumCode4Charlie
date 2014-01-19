@@ -15,19 +15,22 @@ for spine=1:numspines                                                       % lo
     ElevatedTimes{spine}=find(Ntrace(:,spine)>threshold(spine));            % find elevated timepoints
 end
 thresholdSummary=repmat(thresholdSummary,timesteps,1);                      % extend the threshold summary in the time dimensions
-figure;plot(NtraceSummary); hold on; plot(thresholdSummary,'--');           % plot the normalised trace and the thresholds
-for spine=1:numspines                                                       % loop through all ROIs and plot the elevated timepoints
-    plot(ElevatedTimes{spine},...
-        NtraceSummary(ElevatedTimes{spine},spine), 'ko');
-end
+% figure;plot(NtraceSummary); hold on; plot(thresholdSummary,'--');           % plot the normalised trace and the thresholds
+% for spine=1:numspines                                                       % loop through all ROIs and plot the elevated timepoints
+%     plot(ElevatedTimes{spine},...
+%         NtraceSummary(ElevatedTimes{spine},spine), 'ko');
+% end
 %-----------------------------------------------------------------
-
+%         (dElevatingTimes(1:end-1,spine)==1 & ...
+%         peakTimes==1)|...
 %diff approach
+PeakSearchDur=15;                                                           % how long to search for peak after event onset in frames
+OnsetDist=5;
 dNtrace=diff(Ntrace);                                                       % take the difference between each timepoint and the following
 dElevatingTimes=zeros(timesteps, numspines);                                % generate a matrix for storing the differentially elevated timepoints
 HighdElevatingTimes=zeros(timesteps, numspines);                            % generate another matrix for a higher threshold
-[times, spines]=find(dNtrace>0.0700);                                       % find the differentially elevated timepoints above moderate threhold
-[Hightimes, Highspines]=find(dNtrace>0.250);                                % find the ones above a higher threshold
+[times, spines]=find(dNtrace>0.0500);                                       % find the differentially elevated timepoints above moderate threhold
+[Hightimes, Highspines]=find(dNtrace>0.150);                                % find the ones above a higher threshold
 for spine=1:numspines                                                       
     dElevatingTimes(times(spines==spine),spine)=1;                          % assign a 1 to all timepoints above threhold
     HighdElevatingTimes(Hightimes(Highspines==spine),spine)=1;
@@ -36,17 +39,59 @@ events=zeros(timesteps, numspines);                                         % ge
 ddElevatingTimes=diff(dElevatingTimes);                                     % compute the second derivative showing a change int the state of being differentially elevated above a moderate threshold
 for spine=1:numspines                                                       % loop through spines and find the onset of events
     events(((dElevatingTimes(1:end-1,spine)==1 & ...                        % find events that are ( differentially elevated above a moderate threshold and
-        ddElevatingTimes(:,spine)==0))| ...                                 % are also differentially elevated above the moderate threshold at the next timepoint ) or
+        ddElevatingTimes(:,spine)==0))| ...
         HighdElevatingTimes(1:end-1,spine)==1,spine)=1; %:P                 % differentially elevated above a higher threshold
 end
 devents=diff(events);                                                       % in case of a longer lasting rising phase, select the first detected event timepoint as the onset of the event
 events(2:end,:)=devents;                                                    % overwrite the old event matrix with this corrected data
+for spine=1:numspines
+    spineEvents=find(events(:,spine));
+    for event=1:numel(spineEvents)
+        if event<numel(spineEvents) && events(spineEvents(event),spine)==1 ...
+            && spineEvents(event+1)-spineEvents(event)<OnsetDist
+            events(spineEvents(event+1),spine)=0;            
+        end
+    end
+end
+for spine=1:numspines
+    spineEvents=find(events(:,spine));
+    for event=1:numel(spineEvents)
+        currPeakSearchDur=PeakSearchDur;
+        
+            if event<numel(spineEvents)
+                if (spineEvents(event+1)-spineEvents(event))<PeakSearchDur
+                    currPeakSearchDur=spineEvents(event+1)-spineEvents(event);
+                end
+            end
+            if (size(events,1)-spineEvents(event))<currPeakSearchDur
+                currPeakSearchDur=size(events,1)-spineEvents(event);
+            end
+            currPeakSearchBackDur=PeakSearchDur;
+            if (spineEvents(event)-1)<currPeakSearchDur
+                currPeakSearchBackDur=spineEvents(event)-1;
+            end    
+            peakAmp=max(Ntrace(spineEvents(event):spineEvents(event)+currPeakSearchDur,spine));
+            peakAmpThresh=2*std(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine))...
+                +mean(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine));
+%             figure;
+%             plot(Ntrace(:,spine));hold on;
+%             plot(spineEvents(event),Ntrace(spineEvents(event),spine),'ro');
+%             plot(1:1501,peakAmpThresh,'-r');
+%             plot(1:1501,mean(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine)),'-r');
+
+            if peakAmp<peakAmpThresh
+                events(spineEvents(event),spine)=0;
+                'removed'
+            end
+        
+    end
+end
 for spine=1:numspines                                                       % produce summaries for plotting by spacing them by one unit
     dElevatingTimesSummary(:,spine)=dElevatingTimes(:,spine)+spine-1;
     dNtraceSummary(:,spine)=dNtrace(:,spine)+spine-1;
     eventsSummary(:,spine)=events(:,spine)+spine-1;
 end    
-figure;plot(dNtraceSummary,'--');hold on; plot(dElevatingTimesSummary,'-'); % plot the differential signal trace and overlay the binarised trace with the moderate threshold
+% figure;plot(dNtraceSummary,'--');hold on; plot(dElevatingTimesSummary,'-'); % plot the differential signal trace and overlay the binarised trace with the moderate threshold
 
 figure;plot(NtraceSummary); hold on;                                        % plot the normalised signal trace and highlight all event onsets
 for spine=1:numspines                                                       % loop through all ROIs
@@ -77,17 +122,17 @@ end
 for spine=1:numspines
     singleEventsSummary(:,spine)=singleEvents(:,spine)+spine-1;             % produce summary for single events
 end   
-figure;plot(NtraceSummary); hold on;                                        % plot normalised trace
-for spine=1:numspines
-    plot(find(singleEventsSummary(:,spine)>spine-1),...                     % overlay single events
-        NtraceSummary(singleEventsSummary(:,spine)>spine-1,spine), 'ko'); 
-end
+% figure;plot(NtraceSummary); hold on;                                        % plot normalised trace
+% for spine=1:numspines
+%     plot(find(singleEventsSummary(:,spine)>spine-1),...                     % overlay single events
+%         NtraceSummary(singleEventsSummary(:,spine)>spine-1,spine), 'ko'); 
+% end
 
 % second
 % this is over-selective and has to be replaced by correlation analysis
 ssingleEvents=zeros(timesteps, numspines);                                  % create matrix where only strongest events survive                                 
 abs_dNtrace=abs(dNtrace);                                                   % unused
-[times, spines]=find(abs_dNtrace>0.0700);                                   % unused
+[times, spines]=find(abs_dNtrace>0.0100);                                   % unused
 dChangingTimes=zeros(timesteps, numspines);
 for spine=1:numspines 
     dChangingTimes(times(spines==spine),spine)=1;                           % unused
@@ -103,7 +148,8 @@ for timestep=1:timesteps
             endpoint=timestep;
             while endpoint<timesteps-2 && ...                              %
             (dChangingTimes(endpoint,spine)==1 ||...      
-            Ntrace(endpoint,spine)>= Ntrace(timestep,spine)+0.05 )         % works like this so getting but maybe re-include and search for end of decay: dChangingTimes(endpoint,spine)==0 ||...dNtrace(endpoint,spine)>0) && this works really well but detects onset of decay
+            (Ntrace(endpoint,spine)>= Ntrace(timestep,spine)+0.05))
+                                         % works like this so getting but maybe re-include and search for end of decay: dChangingTimes(endpoint,spine)==0 ||...dNtrace(endpoint,spine)>0) && this works really well but detects onset of decay
                                     % 
                 endpoint=endpoint+1;                                          % 
             end
@@ -141,9 +187,12 @@ for timestep=1:timesteps
             SpineEventTrace=Ntrace(timestep:endpoint,spine);
             Biggest=1;
             for otherspine=1:numspines
-%                 if otherspine~=spine
+                if otherspine~=spine
                     OtherSpineEventTrace=Ntrace(timestep:endpoint,otherspine);
-                    [R,P]=corrcoef(SpineEventTrace,OtherSpineEventTrace);
+                    [R,P]=corrcoef(SpineEventTrace,OtherSpineEventTrace);   % problem here with lower thresh?
+                    if numel(R)==1
+                        'why'
+                    end
                     corrRmatrix(otherspine)=R(1,2);
                     
                     corrPmatrix(otherspine)=P(1,2);
@@ -155,7 +204,7 @@ for timestep=1:timesteps
                     end
                         
 
-%                 end
+                end
             end
             if Biggest                                                      % if biggest is still one, i.e. if the differential signal is the strongest for the putative event trace
             CsingleEvents(timestep,spine)=1;                                % then keep it
