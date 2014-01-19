@@ -1,4 +1,4 @@
-function plotNeuronTraces(Firstspine,backgroundfiltered,CsingleEvents,events,stdRemovedEvents,onsetTimingRemovedEvents)
+function plotNeuronTraces(Firstspine,backgroundfiltered,CsingleEvents,events,stdRemovedEvents,onsetTimingRemovedEvents,EventEnds,minDurRemovedEvents,stdThreshMatrix)
 scrsz = get(0,'ScreenSize');
 meanFiltered=mean(backgroundfiltered,3);
 
@@ -29,15 +29,29 @@ for spinestep=1:leftWindows
     % single events
     plot(find(CsingleEvents(:,spine)>0),...
         backgroundfiltered(CsingleEvents(:,spine)>0,spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','r');
+    % event ends
+    plot(find(EventEnds(:,spine)>0),...
+        backgroundfiltered(EventEnds(:,spine)>0,spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','x','MarkerEdgeColor','r');
     % removed duplicate events
     plot(find(CsingleEvents(:,spine)<=0 & events(:,spine)>0),...
         backgroundfiltered((CsingleEvents(:,spine)<=0 & events(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','g');
     % removed std events
     plot(find(stdRemovedEvents(:,spine)>0),...
         backgroundfiltered((stdRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','c');
+    % 2*std+mean thresholds
+    event=1;
+    while numel(stdThreshMatrix{spine,event})
+        plot(stdThreshMatrix{spine,event}(1):stdThreshMatrix{spine,event}(2),...
+               stdThreshMatrix{spine,event}(3)*ones(stdThreshMatrix{spine,event}(2)-stdThreshMatrix{spine,event}(1)+1,1),'-r');
+           event=event+1;
+    end
+    
     % removed onset events
-    plot(find(onsetTimingRemovedEvents(:,spine)>0),...
-        backgroundfiltered((onsetTimingRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.0,'MarkerSize',10,'Marker','o','MarkerEdgeColor','m');
+%     plot(find(onsetTimingRemovedEvents(:,spine)>0),...
+%         backgroundfiltered((onsetTimingRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.0,'MarkerSize',10,'Marker','o','MarkerEdgeColor','m');
+    % removed duration events
+    plot(find(minDurRemovedEvents(:,spine)>0),...
+        backgroundfiltered((minDurRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.2,'MarkerSize',10,'Marker','o','MarkerEdgeColor','y');
     
     if ndims(backgroundfiltered)==3
         stdFiltered=std(backgroundfiltered(:,spine,:),0,3);
@@ -53,14 +67,29 @@ for spinestep=1:rightWindows
     hold on;
     plot(find(CsingleEvents(:,spine)>0),...
         meanFiltered(CsingleEvents(:,spine)>0,spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','r');
+    % event ends
+    plot(find(EventEnds(:,spine)>0),...
+        backgroundfiltered(EventEnds(:,spine)>0,spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','x','MarkerEdgeColor','r');
     plot(find(CsingleEvents(:,spine)<=0 & events(:,spine)>0),...
         backgroundfiltered((CsingleEvents(:,spine)<=0 & events(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','g');
     % removed std events
     plot(find(stdRemovedEvents(:,spine)>0),...
         backgroundfiltered((stdRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','c');
+    
+    % 2*std+mean thresholds
+    event=1;
+    while numel(stdThreshMatrix{spine,event})
+        plot(stdThreshMatrix{spine,event}(1):stdThreshMatrix{spine,event}(2),...
+               stdThreshMatrix{spine,event}(3)*ones(stdThreshMatrix{spine,event}(2)-stdThreshMatrix{spine,event}(1)+1,1),'-r');
+           event=event+1;
+    end
+    
     % removed onset events
-    plot(find(onsetTimingRemovedEvents(:,spine)>0),...
-        backgroundfiltered((onsetTimingRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.0,'MarkerSize',10,'Marker','o','MarkerEdgeColor','m');
+%     plot(find(onsetTimingRemovedEvents(:,spine)>0),...
+%         backgroundfiltered((onsetTimingRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.0,'MarkerSize',10,'Marker','o','MarkerEdgeColor','m');
+    % removed duration events
+    plot(find(minDurRemovedEvents(:,spine)>0),...
+        backgroundfiltered((minDurRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.2,'MarkerSize',10,'Marker','o','MarkerEdgeColor','y');
     
     
     if ndims(backgroundfiltered)==3

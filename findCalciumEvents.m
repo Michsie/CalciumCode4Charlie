@@ -1,4 +1,4 @@
-function [events,singleEvents,CsingleEvents,Ntrace,onsetTimingRemovedEvents,stdRemovedEvents]=findCalciumEvents(meanROIActivity,stdMultiplier,slopeThresh,OnsetDist)
+function [events,singleEvents,CsingleEvents,Ntrace,onsetTimingRemovedEvents,stdRemovedEvents,minDurRemovedEvents,EventEnds,stdThreshMatrix]=findCalciumEvents(meanROIActivity,stdMultiplier,slopeThresh,OnsetDist)
 % detects events from traces of mean ROI intensities over time
 % by thresholding the first derivative of the signal as a long lasting
 % changing time above a moderate change threshold or a short lasting
@@ -28,14 +28,16 @@ if nargin==1
     OnsetDist=5;
     stdMultiplier=2;
     slopeThresh=0.05;
+    minDur=7;
 end
+minDur=7; %remove this!!!!!!!!!!!!!!!!
 PeakSearchDur=15;                                                           % how long to search for peak after event onset in frames
 
 dNtrace=diff(Ntrace);                                                       % take the difference between each timepoint and the following
 dElevatingTimes=zeros(timesteps, numspines);                                % generate a matrix for storing the differentially elevated timepoints
 HighdElevatingTimes=zeros(timesteps, numspines);                            % generate another matrix for a higher threshold
 [times, spines]=find(dNtrace>slopeThresh);                                       % find the differentially elevated timepoints above moderate threhold
-[Hightimes, Highspines]=find(dNtrace>0.150);                                % find the ones above a higher threshold
+[Hightimes, Highspines]=find(dNtrace>slopeThresh*2);                                % find the ones above a higher threshold
 for spine=1:numspines                                                       
     dElevatingTimes(times(spines==spine),spine)=1;                          % assign a 1 to all timepoints above threhold
     HighdElevatingTimes(Hightimes(Highspines==spine),spine)=1;
@@ -49,6 +51,10 @@ for spine=1:numspines                                                       % lo
 end
 devents=diff(events);                                                       % in case of a longer lasting rising phase, select the first detected event timepoint as the onset of the event
 events(2:end,:)=devents;                                                    % overwrite the old event matrix with this corrected data
+events(end-PeakSearchDur:end,:)=0;                                          % too late onsets are ignored because they are too close to end of recording
+
+
+
 onsetTimingRemovedEvents=zeros(timesteps,numspines);
 for spine=1:numspines
     spineEvents=find(events(:,spine));
@@ -60,6 +66,7 @@ for spine=1:numspines
         end
     end
 end
+stdThreshMatrix={};
 stdRemovedEvents=zeros(timesteps,numspines);
 for spine=1:numspines
     spineEvents=find(events(:,spine));
@@ -74,14 +81,18 @@ for spine=1:numspines
             if (size(events,1)-spineEvents(event))<currPeakSearchDur
                 currPeakSearchDur=size(events,1)-spineEvents(event);
             end
-            currPeakSearchBackDur=PeakSearchDur;
-            if (spineEvents(event)-1)<currPeakSearchDur
+            currPeakSearchBackDur=3*PeakSearchDur;                          % maybe do independent peak and std/mean search durations, but this might work too
+            if (spineEvents(event)-1)<currPeakSearchBackDur
                 currPeakSearchBackDur=spineEvents(event)-1;
             end    
             peakAmp=max(Ntrace(spineEvents(event):spineEvents(event)+currPeakSearchDur,spine));
+            if spineEvents(event)-currPeakSearchBackDur<1 || spineEvents(event)+currPeakSearchDur<1
+                'help'
+            end
             peakAmpThresh=stdMultiplier*std(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine))...
                 +mean(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine));
-%             figure;
+            stdThreshMatrix{spine,event}=[spineEvents(event)-currPeakSearchBackDur,spineEvents(event)+currPeakSearchDur,peakAmpThresh];
+            
 %             plot(Ntrace(:,spine));hold on;
 %             plot(spineEvents(event),Ntrace(spineEvents(event),spine),'ro');
 %             plot((spineEvents(event)-currPeakSearchBackDur):(spineEvents(event)+currPeakSearchDur),...
@@ -91,7 +102,7 @@ for spine=1:numspines
             if peakAmp<peakAmpThresh
                 events(spineEvents(event),spine)=0;
                 stdRemovedEvents(spineEvents(event),spine)=1;
-                'removed'
+%                 'removed'
             end
         
     end
@@ -158,16 +169,30 @@ for timestep=1:timesteps
             endpoint=timestep;
             while endpoint<timesteps-2 && ...                              %
             (dChangingTimes(endpoint,spine)==1 ||...      
-            (Ntrace(endpoint,spine)>= Ntrace(timestep,spine)+slopeThresh))
+            (Ntrace(endpoint,spine)>= Ntrace(timestep,spine)+slopeThresh-0.0001))
                                          % works like this so getting but maybe re-include and search for end of decay: dChangingTimes(endpoint,spine)==0 ||...dNtrace(endpoint,spine)>0) && this works really well but detects onset of decay
                                     % 
                 endpoint=endpoint+1;                                          % 
             end
+            
             EventEnds(endpoint,spine)=1;
             EventCorrespondingEnd(timestep,spine)=endpoint;
+            
         end
     end
 end
+
+minDurRemovedEvents=zeros(timesteps,numspines);
+for spine=1:numspines
+    spineEvents=find(events(:,spine));
+    for event=1:numel(spineEvents)
+        if EventCorrespondingEnd(spineEvents(event),spine)-spineEvents(event)<minDur
+            events(spineEvents(event),spine)=0;  
+            minDurRemovedEvents(spineEvents(event),spine)=1;
+        end
+    end
+end
+
 % preparing and plotting
 for spine=1:numspines
     EventEndSummary(:,spine)=EventEnds(:,spine)+spine-1;             % produce summary for single events
@@ -282,6 +307,7 @@ end
 for spine=1:numspines                                                       % summary matrix
     ssingleEventsSummary(:,spine)=ssingleEvents(:,spine)+spine-1;
 end   
+createDatatable(CsingleEvents,EventCorrespondingEnd);
 % figure;plot(NtraceSummary); hold on;                                        % plot
 % for spine=1:numspines
 %     plot(find(ssingleEventsSummary(:,spine)>spine-1),...

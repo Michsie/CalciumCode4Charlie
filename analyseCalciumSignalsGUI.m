@@ -64,6 +64,10 @@ handles.events = varargin{5};
 handles.stdRemoved = varargin{6};
 handles.onsetRemoved= varargin{7};
 handles.meanROIActivity= varargin{8};
+handles.EventEnds= varargin{9};
+handles.minDurRemovedEvents= varargin{10};
+handles.stdThreshMatrix= varargin{11};
+
 handles.stdMultiplier=2;
 handles.slopeThresh=0.05;
 handles.onsetDist=5;
@@ -77,18 +81,31 @@ try
 catch
     'StackSlider doesnt work restart matlab might help'
 end
-
-    % handles.table = figure('name','spikes','Position',[1000 100 700 900]);
-    % cnames{1}='0';
-    % cnames{2}='45';
-    % cnames{3}='90';
-    % cnames{4}='135';
-    % cnames{5}='180';
-    % cnames{6}='225';
-    % cnames{7}='270';
-    % cnames{8}='315';
-    % t=uitable('Parent',handles.table,'ColumnName',cnames,'Data',[zeros(2,8);handles.spikes],'Position',[20 20 640 860]);
-    % set(handles.table, 'HandleVisibility', 'off');
+% scrsz = get(0,'ScreenSize');
+% handles.table=figure('name','events','OuterPosition',[0.75*scrsz(3),0*scrsz(4),0.25*scrsz(3),0.5*scrsz(4)-70]);
+% numEvents=sum(handles.CsingleEvents(:));
+% [numtimesteps,numspines]=size(handles.CsingleEvents);
+% rnames=[1:numEvents];
+%     
+%     cnames{1}='spine';
+%     cnames{2}='duration';
+%     cnames{4}='auto(0),del(1),add(2)';
+%     cnames{3}='start';
+%     % cnames{5}='180';
+%     % cnames{6}='225';
+%     % cnames{7}='270';
+%     % cnames{8}='315';
+% dat=zeros(numevents,4);
+% event=1;
+% for spine=1:numspines
+%     for timestep=1:numtimesteps
+%         if handles.CsingleEvents==1
+%             dat(event,1)=spine;
+%             dat(event,2)=
+%             event=event+1;
+% end
+% t=uitable('Parent',handles.table,'ColumnName',cnames,'Data',dat,'Position',[20 20 0.25*scrsz(3)-40 0.5*scrsz(4)-70-40],'ColumnWidth',{25},'RowName',rnames);
+%     % set(handles.table, 'HandleVisibility', 'off');
 % set(hObject,'handlevisibility','off') %attempt to make the GUI unclosable
 % Choose default command line output for analyseCalciumGUI
 handles.output = hObject;
@@ -146,7 +163,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 if handles.neuron>size(handles.NCalciumSignal,2)
     'number specified exceeds number of ROIs'
 else    
-    plotNeuronTraces(handles.neuron,handles.NCalciumSignal,handles.CsingleEvents,handles.events,handles.stdRemoved,handles.onsetRemoved);
+    plotNeuronTraces(handles.neuron,handles.NCalciumSignal,handles.CsingleEvents,handles.events,handles.stdRemoved,handles.onsetRemoved,handles.EventEnds,handles.minDurRemovedEvents,handles.stdThreshMatrix);
     
 end
 
@@ -326,7 +343,7 @@ function ReAnalyse_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [handles.events,singleEvents,handles.CsingleEvents,handles.Ntrace,...
-    handles.onsetRemoved,handles.stdRemoved]=findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,handles.slopeThresh,handles.onsetDist);
+    handles.onsetRemoved,handles.stdRemoved,handles.minDurRemovedEvents,handles.EventEnds,handles.stdThreshMatrix]=findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,handles.slopeThresh,handles.onsetDist);
 guidata(hObject, handles);
 
 
