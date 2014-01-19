@@ -1,4 +1,4 @@
-function plotNeuronTraces(Firstspine,backgroundfiltered,CsingleEvents,events)
+function plotNeuronTraces(Firstspine,backgroundfiltered,CsingleEvents,events,stdRemovedEvents,onsetTimingRemovedEvents)
 scrsz = get(0,'ScreenSize');
 meanFiltered=mean(backgroundfiltered,3);
 
@@ -32,6 +32,13 @@ for spinestep=1:leftWindows
     % removed duplicate events
     plot(find(CsingleEvents(:,spine)<=0 & events(:,spine)>0),...
         backgroundfiltered((CsingleEvents(:,spine)<=0 & events(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','g');
+    % removed std events
+    plot(find(stdRemovedEvents(:,spine)>0),...
+        backgroundfiltered((stdRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','c');
+    % removed onset events
+    plot(find(onsetTimingRemovedEvents(:,spine)>0),...
+        backgroundfiltered((onsetTimingRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.0,'MarkerSize',10,'Marker','o','MarkerEdgeColor','m');
+    
     if ndims(backgroundfiltered)==3
         stdFiltered=std(backgroundfiltered(:,spine,:),0,3);
         ciplot(meanFiltered(:,spine)-stdFiltered,meanFiltered(:,spine)+stdFiltered);
@@ -48,6 +55,14 @@ for spinestep=1:rightWindows
         meanFiltered(CsingleEvents(:,spine)>0,spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','r');
     plot(find(CsingleEvents(:,spine)<=0 & events(:,spine)>0),...
         backgroundfiltered((CsingleEvents(:,spine)<=0 & events(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','g');
+    % removed std events
+    plot(find(stdRemovedEvents(:,spine)>0),...
+        backgroundfiltered((stdRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.1,'MarkerSize',10,'Marker','o','MarkerEdgeColor','c');
+    % removed onset events
+    plot(find(onsetTimingRemovedEvents(:,spine)>0),...
+        backgroundfiltered((onsetTimingRemovedEvents(:,spine)>0),spine),'LineStyle','none','LineWidth',1.0,'MarkerSize',10,'Marker','o','MarkerEdgeColor','m');
+    
+    
     if ndims(backgroundfiltered)==3
         stdFiltered=std(backgroundfiltered(:,spine,:),0,3);
         ciplot(meanFiltered(:,spine)-stdFiltered,meanFiltered(:,spine)+stdFiltered);

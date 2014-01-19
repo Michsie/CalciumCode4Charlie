@@ -15,4 +15,4 @@ end
 for spine=1:numspines
 NtraceSummary(:,spine)=Ntrace(:,spine)+spine-1;
 end
-figure;plot(NtraceSummary);
+% figure;plot(NtraceSummary);

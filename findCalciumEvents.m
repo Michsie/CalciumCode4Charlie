@@ -1,4 +1,4 @@
-function [events,singleEvents,CsingleEvents,Ntrace]=findCalciumEvents(meanROIActivity)
+function [events,singleEvents,CsingleEvents,Ntrace,onsetTimingRemovedEvents,stdRemovedEvents]=findCalciumEvents(meanROIActivity,stdMultiplier,slopeThresh,OnsetDist)
 % detects events from traces of mean ROI intensities over time
 % by thresholding the first derivative of the signal as a long lasting
 % changing time above a moderate change threshold or a short lasting
@@ -24,12 +24,17 @@ thresholdSummary=repmat(thresholdSummary,timesteps,1);                      % ex
 %         (dElevatingTimes(1:end-1,spine)==1 & ...
 %         peakTimes==1)|...
 %diff approach
+if nargin==1
+    OnsetDist=5;
+    stdMultiplier=2;
+    slopeThresh=0.05;
+end
 PeakSearchDur=15;                                                           % how long to search for peak after event onset in frames
-OnsetDist=5;
+
 dNtrace=diff(Ntrace);                                                       % take the difference between each timepoint and the following
 dElevatingTimes=zeros(timesteps, numspines);                                % generate a matrix for storing the differentially elevated timepoints
 HighdElevatingTimes=zeros(timesteps, numspines);                            % generate another matrix for a higher threshold
-[times, spines]=find(dNtrace>0.0500);                                       % find the differentially elevated timepoints above moderate threhold
+[times, spines]=find(dNtrace>slopeThresh);                                       % find the differentially elevated timepoints above moderate threhold
 [Hightimes, Highspines]=find(dNtrace>0.150);                                % find the ones above a higher threshold
 for spine=1:numspines                                                       
     dElevatingTimes(times(spines==spine),spine)=1;                          % assign a 1 to all timepoints above threhold
@@ -44,15 +49,18 @@ for spine=1:numspines                                                       % lo
 end
 devents=diff(events);                                                       % in case of a longer lasting rising phase, select the first detected event timepoint as the onset of the event
 events(2:end,:)=devents;                                                    % overwrite the old event matrix with this corrected data
+onsetTimingRemovedEvents=zeros(timesteps,numspines);
 for spine=1:numspines
     spineEvents=find(events(:,spine));
     for event=1:numel(spineEvents)
         if event<numel(spineEvents) && events(spineEvents(event),spine)==1 ...
             && spineEvents(event+1)-spineEvents(event)<OnsetDist
-            events(spineEvents(event+1),spine)=0;            
+            events(spineEvents(event+1),spine)=0;  
+            onsetTimingRemovedEvents(spineEvents(event+1),spine)=1;
         end
     end
 end
+stdRemovedEvents=zeros(timesteps,numspines);
 for spine=1:numspines
     spineEvents=find(events(:,spine));
     for event=1:numel(spineEvents)
@@ -71,16 +79,18 @@ for spine=1:numspines
                 currPeakSearchBackDur=spineEvents(event)-1;
             end    
             peakAmp=max(Ntrace(spineEvents(event):spineEvents(event)+currPeakSearchDur,spine));
-            peakAmpThresh=2*std(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine))...
+            peakAmpThresh=stdMultiplier*std(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine))...
                 +mean(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine));
 %             figure;
 %             plot(Ntrace(:,spine));hold on;
 %             plot(spineEvents(event),Ntrace(spineEvents(event),spine),'ro');
-%             plot(1:1501,peakAmpThresh,'-r');
+%             plot((spineEvents(event)-currPeakSearchBackDur):(spineEvents(event)+currPeakSearchDur),...
+%                 peakAmpThresh*ones(currPeakSearchBackDur+currPeakSearchDur+1,1),'-r');
 %             plot(1:1501,mean(Ntrace(spineEvents(event)-currPeakSearchBackDur:spineEvents(event)+currPeakSearchDur,spine)),'-r');
 
             if peakAmp<peakAmpThresh
                 events(spineEvents(event),spine)=0;
+                stdRemovedEvents(spineEvents(event),spine)=1;
                 'removed'
             end
         
@@ -93,11 +103,11 @@ for spine=1:numspines                                                       % pr
 end    
 % figure;plot(dNtraceSummary,'--');hold on; plot(dElevatingTimesSummary,'-'); % plot the differential signal trace and overlay the binarised trace with the moderate threshold
 
-figure;plot(NtraceSummary); hold on;                                        % plot the normalised signal trace and highlight all event onsets
-for spine=1:numspines                                                       % loop through all ROIs
-    plot(find(eventsSummary(:,spine)>spine-1),...                           % get the X values of the event onsets for the current ROI in the event Summary - therefore '> spine-1' and not '>1' to counteract the 1 unit spacing in the summary matrix (could probably use normal event matrix here for less confusion)
-        NtraceSummary(eventsSummary(:,spine)>spine-1,spine), 'ko');         % then find the corresponding Y values in the original signal trace of the current ROI and label them with a black circle
-end
+% figure;plot(NtraceSummary); hold on;                                        % plot the normalised signal trace and highlight all event onsets
+% for spine=1:numspines                                                       % loop through all ROIs
+%     plot(find(eventsSummary(:,spine)>spine-1),...                           % get the X values of the event onsets for the current ROI in the event Summary - therefore '> spine-1' and not '>1' to counteract the 1 unit spacing in the summary matrix (could probably use normal event matrix here for less confusion)
+%         NtraceSummary(eventsSummary(:,spine)>spine-1,spine), 'ko');         % then find the corresponding Y values in the original signal trace of the current ROI and label them with a black circle
+% end
 %-------------------------------------------------------------------
 % find single events/ remove events that are due to spread of signal
 % first look for events that happen at the same time and only keep the
@@ -148,7 +158,7 @@ for timestep=1:timesteps
             endpoint=timestep;
             while endpoint<timesteps-2 && ...                              %
             (dChangingTimes(endpoint,spine)==1 ||...      
-            (Ntrace(endpoint,spine)>= Ntrace(timestep,spine)+0.05))
+            (Ntrace(endpoint,spine)>= Ntrace(timestep,spine)+slopeThresh))
                                          % works like this so getting but maybe re-include and search for end of decay: dChangingTimes(endpoint,spine)==0 ||...dNtrace(endpoint,spine)>0) && this works really well but detects onset of decay
                                     % 
                 endpoint=endpoint+1;                                          % 
@@ -272,9 +282,9 @@ end
 for spine=1:numspines                                                       % summary matrix
     ssingleEventsSummary(:,spine)=ssingleEvents(:,spine)+spine-1;
 end   
-figure;plot(NtraceSummary); hold on;                                        % plot
-for spine=1:numspines
-    plot(find(ssingleEventsSummary(:,spine)>spine-1),...
-        NtraceSummary(ssingleEventsSummary(:,spine)>spine-1,spine), 'ko'); 
-end
+% figure;plot(NtraceSummary); hold on;                                        % plot
+% for spine=1:numspines
+%     plot(find(ssingleEventsSummary(:,spine)>spine-1),...
+%         NtraceSummary(ssingleEventsSummary(:,spine)>spine-1,spine), 'ko'); 
+% end
 

@@ -22,7 +22,7 @@ function varargout = analyseCalciumSignalsGUI(varargin)
 
 % Edit the above text to modify the response to help analyseCalciumGUI
 
-% Last Modified by GUIDE v2.5 29-May-2013 12:14:15
+% Last Modified by GUIDE v2.5 10-Jan-2014 16:56:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,9 +61,12 @@ handles.JayPeg=varargin{2};
 handles.FinalImage = varargin{3};
 handles.CsingleEvents = varargin{4};
 handles.events = varargin{5};
-
-
-
+handles.stdRemoved = varargin{6};
+handles.onsetRemoved= varargin{7};
+handles.meanROIActivity= varargin{8};
+handles.stdMultiplier=2;
+handles.slopeThresh=0.05;
+handles.onsetDist=5;
 
 
 
@@ -143,7 +146,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 if handles.neuron>size(handles.NCalciumSignal,2)
     'number specified exceeds number of ROIs'
 else    
-    plotNeuronTraces(handles.neuron,handles.NCalciumSignal,handles.CsingleEvents,handles.events);
+    plotNeuronTraces(handles.neuron,handles.NCalciumSignal,handles.CsingleEvents,handles.events,handles.stdRemoved,handles.onsetRemoved);
     
 end
 
@@ -315,3 +318,85 @@ catch
 end
 StackSlider(handles.FinalImage,'uint16');
 guidata(hObject, handles);
+
+
+% --- Executes on button press in ReAnalyse.
+function ReAnalyse_Callback(hObject, eventdata, handles)
+% hObject    handle to ReAnalyse (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[handles.events,singleEvents,handles.CsingleEvents,handles.Ntrace,...
+    handles.onsetRemoved,handles.stdRemoved]=findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,handles.slopeThresh,handles.onsetDist);
+guidata(hObject, handles);
+
+
+
+function std_Callback(hObject, eventdata, handles)
+% hObject    handle to std (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.stdMultiplier=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of std as text
+%        str2double(get(hObject,'String')) returns contents of std as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function std_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to std (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function onset_Callback(hObject, eventdata, handles)
+% hObject    handle to onset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.onsetDist=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of onset as text
+%        str2double(get(hObject,'String')) returns contents of onset as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function onset_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to onset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function slope_Callback(hObject, eventdata, handles)
+% hObject    handle to slope (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.slopeThresh=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of slope as text
+%        str2double(get(hObject,'String')) returns contents of slope as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function slope_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slope (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
