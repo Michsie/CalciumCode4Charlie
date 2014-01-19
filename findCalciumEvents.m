@@ -1,7 +1,7 @@
-function [events,CsingleEvents,Ntrace,onsetTimingRemovedEvents,stdRemovedEvents,...
-    minDurRemovedEvents,EventEnds,stdThreshMatrix,tableFigureHandle,tableHandle]=...
-    findCalciumEvents(meanROIActivity,stdMultiplier,slopeThresh,OnsetDist,...
+function data=findCalciumEvents(meanROIActivity,stdMultiplier,slopeThresh,OnsetDist,...
     minDur,BaselineDur,PeakSearchDur)
+% data=[events,CsingleEvents,Ntrace,onsetTimingRemovedEvents,stdRemovedEvents,...
+%     minDurRemovedEvents,EventEnds,stdThreshMatrix,tableFigureHandle,tableHandle]
 % detects events from traces of mean ROI intensities over time
 % by thresholding the first derivative of the signal as a long lasting
 % changing time above a moderate change threshold or a short lasting
@@ -212,5 +212,18 @@ set(PureEvents, 'HandleVisibility', 'off');
 % end of correlated analysis
   
 [tableFigureHandle,tableHandle]=createDatatable(CsingleEvents,EventCorrespondingEnd);
+
+data.events=events;
+data.CsingleEvents=CsingleEvents;
+data.Ntrace=Ntrace;
+data.onsetTimingRemovedEvents=onsetTimingRemovedEvents;
+data.stdRemovedEvents=stdRemovedEvents;
+data.minDurRemovedEvents=minDurRemovedEvents;
+data.EventEnds=EventEnds;
+data.stdThreshMatrix=stdThreshMatrix;
+data.tableFigureHandle=tableFigureHandle;
+data.tableHandle=tableHandle;
+
+
 
 

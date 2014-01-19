@@ -1,5 +1,11 @@
-function [delTimestep,events,CsingleEvents]=deleteEvent...
-    (events,CsingleEvents,spineHandleList,Ntrace,TableFigureHandle,TableHandle)
+function [delTimestep,data]=deleteEvent...
+    (data,spineHandleList)
+Ntrace=data.Ntrace;
+CsingleEvents=data.CsingleEvents;
+events=data.events;
+TableFigureHandle=data.tableFigureHandle;
+TableHandle=data.tableHandle;
+
 mousepress = waitforbuttonpress;
 axishandle=gca;
 axes(axishandle);
@@ -45,6 +51,8 @@ else
     events(delTimestep,spine)=0;
     CsingleEvents(delTimestep,spine)=0;
 end
+data.events=events;
+data.CsingleEvents=CsingleEvents;
 hold on
 plot(delTimestep,Ntrace(delTimestep,spine),'LineStyle','none',...
     'LineWidth',1.2,'MarkerSize',20,'Marker','x','MarkerEdgeColor','k');

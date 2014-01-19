@@ -22,7 +22,7 @@ function varargout = analyseCalciumSignalsGUI(varargin)
 
 % Edit the above text to modify the response to help analyseCalciumGUI
 
-% Last Modified by GUIDE v2.5 16-Jan-2014 14:48:32
+% Last Modified by GUIDE v2.5 17-Jan-2014 17:13:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,22 +53,22 @@ function analyseCalciumSignalsGUI_OpeningFcn(hObject, eventdata, handles, vararg
 % varargin   command line arguments to analyseCalciumGUI (see VARARGIN)
 handles.handleToCalciumGUI=hObject;
 set(handles.handleToCalciumGUI,'Toolbar','figure')
-
-handles.NCalciumSignal=varargin{1};
-
+handles.data=varargin{1};
+% handles.NCalciumSignal=varargin{1};
+% 
 handles.JayPeg=varargin{2};
-
+% 
 handles.FinalImage = varargin{3};
-handles.CsingleEvents = varargin{4};
-handles.events = varargin{5};
-handles.stdRemoved = varargin{6};
-handles.onsetRemoved= varargin{7};
-handles.meanROIActivity= varargin{8};
-handles.EventEnds= varargin{9};
-handles.minDurRemovedEvents= varargin{10};
-handles.stdThreshMatrix= varargin{11};
-handles.tableFigureHandle=varargin{12};
-handles.tableHandle=varargin{13};
+% handles.CsingleEvents = varargin{4};
+% handles.events = varargin{5};
+% handles.stdRemoved = varargin{6};
+% handles.onsetRemoved= varargin{7};
+handles.meanROIActivity= varargin{4}; %8
+% handles.EventEnds= varargin{9};
+% handles.minDurRemovedEvents= varargin{10};
+% handles.stdThreshMatrix= varargin{11};
+% handles.tableFigureHandle=varargin{12};
+% handles.tableHandle=varargin{13};
 
 
 handles.stdMultiplier=2;
@@ -134,30 +134,7 @@ varargout{1} = handles.output;
 
 
 
-function neuron_Callback(hObject, eventdata, handles)
-% hObject    handle to neuron (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-handles.neuron=str2num(get(hObject,'String'));
-
-guidata(hObject, handles);
-
-% Hints: get(hObject,'String') returns contents of neuron as text
-%        str2double(get(hObject,'String')) returns contents of neuron as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function neuron_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to neuron (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in pushbutton1.
@@ -165,33 +142,12 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if handles.neuron>size(handles.NCalciumSignal,2)
-    'number specified exceeds number of ROIs'
-else    
-    handles.SpineHandleList=plotNeuronTraces(handles.neuron,handles.NCalciumSignal,...
-        handles.CsingleEvents,handles.events,handles.stdRemoved,...
-        handles.onsetRemoved,handles.EventEnds,handles.minDurRemovedEvents,handles.stdThreshMatrix);
-    
-end
+% if handles.neuron>size(handles.data.Ntrace,2)
+%     'number specified exceeds number of ROIs'
+% else   
+    handles.SpineHandleList=plotNeuronTraces(handles.neuron,handles.data);    
+% end
 guidata(hObject, handles);
-
-
-
-
-
-% --- Executes on key press with focus on neuron and none of its controls.
-function neuron_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to neuron (see GCBO)
-% eventdata  structure with the following fields (see UICONTROL)
-%	Key: name of the key that was pressed, in lower case
-%	Character: character interpretation of the key(s) that was pressed
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
-
-if strcmp(eventdata.Key,'return');
-    pushbutton1_Callback(hObject, eventdata, handles);
-end
-
 
 % --- Executes on button press in pushbutton3.
 function pushbutton3_Callback(hObject, eventdata, handles)
@@ -201,15 +157,6 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 set(handles.handleToCalciumGUI, 'HandleVisibility', 'off');
 close all;
 set(handles.handleToCalciumGUI, 'HandleVisibility', 'on');
-
-
-% --- Executes on button press in pushbutton4.
-function pushbutton4_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-StackSlider(handles.FinalImage,'uint16');
-
 
 % --- Executes on button press in pushbutton5.
 function pushbutton5_Callback(hObject, eventdata, handles)
@@ -296,40 +243,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-% --- Executes on button press in pushbutton7.
-function pushbutton7_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton7 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-plotIndividualTraces(handles.neuron-2,handles.backgroundfiltered,handles.orientation,handles.initialFramesToDiscard,...
-            handles.FramesPerOrientation,handles.framesDuringStim,handles.blackFramesBeforeStim,handles.orientationData);
-
-
-function edit4_Callback(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.orientation=str2num(get(hObject, 'String'));
-guidata(hObject, handles);
-% Hints: get(hObject,'String') returns contents of edit4 as text
-%        str2double(get(hObject,'String')) returns contents of edit4 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on button press in pushbutton8.
 function pushbutton8_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton8 (see GCBO)
@@ -349,11 +262,7 @@ function ReAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to ReAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[handles.events,handles.CsingleEvents,handles.NCalciumSignal,...
-    handles.onsetRemoved,handles.stdRemoved,handles.minDurRemovedEvents,...
-    handles.EventEnds,handles.stdThreshMatrix,handles.tableFigureHandle,...
-handles.tableHandle]=...
-findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,...
+[handles.data]=findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,...
 handles.slopeThresh,handles.onsetDist,handles.minDur,handles.baselineLength,...
 handles.peakSearchDur);
 guidata(hObject, handles);
@@ -532,9 +441,9 @@ function delete_Callback(hObject, eventdata, handles)
 % hObject    handle to delete (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[handles.delTimesteps,handles.events,handles.CsingleEvents]=...
-    deleteEvent(handles.events,handles.CsingleEvents,handles.SpineHandleList,...
-    handles.NCalciumSignal,handles.tableFigureHandle,handles.tableHandle);
+
+[handles.delTimesteps,handles.data]=...
+    deleteEvent(handles.data,handles.SpineHandleList);
 
 guidata(hObject, handles);
 
@@ -543,3 +452,14 @@ function create_Callback(hObject, eventdata, handles)
 % hObject    handle to create (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
+function neuron_Callback(hObject, eventdata, handles)
+% hObject    handle to neuron (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.neuron=str2num(get(hObject, 'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of neuron as text
+%        str2double(get(hObject,'String')) returns contents of neuron as a double

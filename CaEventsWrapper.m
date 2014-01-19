@@ -1,14 +1,12 @@
 function CaEventsWrapper(meanROIActivity)
-[events,CsingleEvents,Ntrace,OnsetRemoved,StdRemoved,...
-    minDurRemovedEvents,EventEnds,stdThreshMatrix,tableFigureHandle,tableHandle]= ...
-    findCalciumEvents(meanROIActivity);
+% [events,CsingleEvents,Ntrace,OnsetRemoved,StdRemoved,...
+%     minDurRemovedEvents,EventEnds,stdThreshMatrix,tableFigureHandle,tableHandle]
+data=findCalciumEvents(meanROIActivity);
 TifStack=load('CG1809134aQuick.mat');
 TifStack=TifStack.FinalImage;
 OverviewImage=load('fmedianAndf0.mat');
 OverviewImage=OverviewImage.fmedian;
-analyseCalciumSignalsGUI(Ntrace,OverviewImage,TifStack,CsingleEvents,...
-    events,StdRemoved,OnsetRemoved,meanROIActivity,EventEnds,...
-    minDurRemovedEvents,stdThreshMatrix,tableFigureHandle,tableHandle);
+analyseCalciumSignalsGUI(data,OverviewImage,TifStack,meanROIActivity);
 
 % % this opens ROIs from ROIfolder of unzipped imageJ ROI zip; number
 % % corresponds to excel sheet polygon number/ number displayed in

@@ -1,6 +1,25 @@
-function spineHandleList=plotNeuronTraces(Firstspine,backgroundfiltered,CsingleEvents,events,stdRemovedEvents,onsetTimingRemovedEvents,EventEnds,minDurRemovedEvents,stdThreshMatrix)
+function spineHandleList=plotNeuronTraces(Firstspine,data)
+
+backgroundfiltered=data.Ntrace;
+CsingleEvents=data.CsingleEvents;
+events=data.events;
+stdRemovedEvents=data.stdRemovedEvents;
+onsetTimingRemovedEvents=data.onsetTimingRemovedEvents;
+EventEnds=data.EventEnds;
+minDurRemovedEvents=data.minDurRemovedEvents;
+stdThreshMatrix=data.stdThreshMatrix;
 scrsz = get(0,'ScreenSize');
 meanFiltered=mean(backgroundfiltered,3);
+% data.events=events;
+% data.CsingleEvents=CsingleEvents;
+% data.Ntrace=Ntrace;
+% data.onsetTimingRemovedEvents=onsetTimingRemovedEvents;
+% data.stdRemovedEvents=stdRemovedEvents;
+% data.minDurRemovedEvents=minDurRemovedEvents;
+% data.EventEnds=EventEnds;
+% data.stdThreshMatrix=stdThreshMatrix;
+% data.tableFigureHandle=tableFigureHandle;
+% data.tableHandle=tableHandle;
 
 % figure('Position',[1 scrsz(4)/2 scrsz(3)/2 scrsz(4)/2])
 % numWindows=8;
