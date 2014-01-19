@@ -1,4 +1,4 @@
-function plotNeuronTraces(Firstspine,backgroundfiltered,CsingleEvents,events,stdRemovedEvents,onsetTimingRemovedEvents,EventEnds,minDurRemovedEvents,stdThreshMatrix)
+function spineHandleList=plotNeuronTraces(Firstspine,backgroundfiltered,CsingleEvents,events,stdRemovedEvents,onsetTimingRemovedEvents,EventEnds,minDurRemovedEvents,stdThreshMatrix)
 scrsz = get(0,'ScreenSize');
 meanFiltered=mean(backgroundfiltered,3);
 
@@ -7,6 +7,7 @@ meanFiltered=mean(backgroundfiltered,3);
 maxWindows=14;
 rightWindows=0;
 numWindows=numel(Firstspine);
+spineHandleList=zeros(numWindows,2);
 if numWindows>maxWindows
     Firstspine=Firstspine(1:maxWindows);
     numWindows=maxWindows;
@@ -24,6 +25,7 @@ for spinestep=1:leftWindows
     spine=Firstspine(spinestep);
     figure('Toolbar','none','MenuBar','none','name',strcat('spine',num2str(spine),' normalised trace'),...
         'Position',[10,(maxWindows/2-spinestep)*(scrsz(4)-(bottomScreenDist+topScreenDist))/(maxWindows/2)+bottomScreenDist,scrsz(3)/2.7-20,scrsz(4)/(maxWindows/2)-FigureNameAndLabelHeight]);
+    spineHandleList(spinestep,:)=[spine,gcf];
     plot(meanFiltered(:,spine),'color','b'); title(strcat('normalised spine ',num2str(spine)));
     hold on;
     % single events
@@ -63,6 +65,7 @@ for spinestep=1:rightWindows
     figure('Toolbar','none','MenuBar','none','name',strcat('spine',num2str(spine),' normalised trace'),...
         'Position',[scrsz(3)/2.7...                                         % not sure if those ... are necessary
         ,(maxWindows/2-spinestep)*(scrsz(4)-(bottomScreenDist+topScreenDist))/(maxWindows/2)+bottomScreenDist,scrsz(3)/2.7-20,scrsz(4)/(maxWindows/2)-FigureNameAndLabelHeight]);
+    spineHandleList(spinestep+maxWindows/2,:)=[spine,gcf];
     plot(meanFiltered(:,spine),'color','b'); title(strcat('normalised spine ',num2str(spine)));
     hold on;
     plot(find(CsingleEvents(:,spine)>0),...

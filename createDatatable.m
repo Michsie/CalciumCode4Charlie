@@ -1,4 +1,4 @@
-function createDatatable(CsingleEvents,EventCorrespondingEnd)
+function [tbl,t]=createDatatable(CsingleEvents,EventCorrespondingEnd)
 scrsz = get(0,'ScreenSize');
 tbl=figure('name','events','OuterPosition',[0.75*scrsz(3),0*scrsz(4),0.25*scrsz(3),0.5*scrsz(4)-70]);
 numEvents=sum(CsingleEvents(:));

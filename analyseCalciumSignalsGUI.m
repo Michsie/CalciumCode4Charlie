@@ -22,7 +22,7 @@ function varargout = analyseCalciumSignalsGUI(varargin)
 
 % Edit the above text to modify the response to help analyseCalciumGUI
 
-% Last Modified by GUIDE v2.5 15-Jan-2014 16:59:55
+% Last Modified by GUIDE v2.5 16-Jan-2014 14:48:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,6 +67,9 @@ handles.meanROIActivity= varargin{8};
 handles.EventEnds= varargin{9};
 handles.minDurRemovedEvents= varargin{10};
 handles.stdThreshMatrix= varargin{11};
+handles.tableFigureHandle=varargin{12};
+handles.tableHandle=varargin{13};
+
 
 handles.stdMultiplier=2;
 handles.slopeThresh=0.05;
@@ -78,11 +81,11 @@ handles.peakSearchDur=15;
 
 imagesc(handles.JayPeg);axis ij;                                            %displays the ROI overview Image in the axes of the GUI
 
-try
-    StackSlider(handles.FinalImage);                                                % opens the StackSlider
-catch
-    'StackSlider doesnt work restart matlab might help'
-end
+% try
+%     StackSlider(handles.FinalImage);                                                % opens the StackSlider
+% catch
+%     'StackSlider doesnt work restart matlab might help'
+% end
 % scrsz = get(0,'ScreenSize');
 % handles.table=figure('name','events','OuterPosition',[0.75*scrsz(3),0*scrsz(4),0.25*scrsz(3),0.5*scrsz(4)-70]);
 % numEvents=sum(handles.CsingleEvents(:));
@@ -165,10 +168,12 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 if handles.neuron>size(handles.NCalciumSignal,2)
     'number specified exceeds number of ROIs'
 else    
-    plotNeuronTraces(handles.neuron,handles.NCalciumSignal,handles.CsingleEvents,handles.events,handles.stdRemoved,handles.onsetRemoved,handles.EventEnds,handles.minDurRemovedEvents,handles.stdThreshMatrix);
+    handles.SpineHandleList=plotNeuronTraces(handles.neuron,handles.NCalciumSignal,...
+        handles.CsingleEvents,handles.events,handles.stdRemoved,...
+        handles.onsetRemoved,handles.EventEnds,handles.minDurRemovedEvents,handles.stdThreshMatrix);
     
 end
-
+guidata(hObject, handles);
 
 
 
@@ -344,8 +349,13 @@ function ReAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to ReAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[handles.events,singleEvents,handles.CsingleEvents,handles.Ntrace,...
-    handles.onsetRemoved,handles.stdRemoved,handles.minDurRemovedEvents,handles.EventEnds,handles.stdThreshMatrix]=findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,handles.slopeThresh,handles.onsetDist,handles.minDur,handles.baselineLength,handles.peakSearchDur);
+[handles.events,handles.CsingleEvents,handles.NCalciumSignal,...
+    handles.onsetRemoved,handles.stdRemoved,handles.minDurRemovedEvents,...
+    handles.EventEnds,handles.stdThreshMatrix,handles.tableFigureHandle,...
+handles.tableHandle]=...
+findCalciumEvents(handles.meanROIActivity,handles.stdMultiplier,...
+handles.slopeThresh,handles.onsetDist,handles.minDur,handles.baselineLength,...
+handles.peakSearchDur);
 guidata(hObject, handles);
 
 
@@ -515,3 +525,21 @@ function acquisitionFrequency_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in delete.
+function delete_Callback(hObject, eventdata, handles)
+% hObject    handle to delete (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[handles.delTimesteps,handles.events,handles.CsingleEvents]=...
+    deleteEvent(handles.events,handles.CsingleEvents,handles.SpineHandleList,...
+    handles.NCalciumSignal,handles.tableFigureHandle,handles.tableHandle);
+
+guidata(hObject, handles);
+
+% --- Executes on button press in create.
+function create_Callback(hObject, eventdata, handles)
+% hObject    handle to create (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
